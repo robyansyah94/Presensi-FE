@@ -73,7 +73,7 @@ const onDetect = async (detectedCodes) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Accept: "application/json",
+            Accept: "application/json", // WAJIB: Agar Laravel kirim pesan error JSON
           },
           body: JSON.stringify({
             qr_token: rawValue,
@@ -83,18 +83,24 @@ const onDetect = async (detectedCodes) => {
       );
 
       const data = await res.json();
-      console.log("RESPON LARAVEL:", data);
 
-      alert(data.message);
+      if (res.ok) {
+        // Jika status 200 (Berhasil)
+        alert("✅ " + data.message);
+      } else {
+        // Jika status 400 atau 404 (QR Expired, Karyawan Tidak Ditemukan, dll)
+        alert("❌ " + (data.message || "Gagal Presensi"));
+      }
     } catch (err) {
-      console.log(err);
-      alert("Gagal kirim ke server");
+      console.error("ERROR_SCAN:", err);
+      alert("📡 Masalah Koneksi ke Server");
+    } finally {
+      // Tunggu 3 detik sebelum mengizinkan scan lagi (mencegah double tap)
+      setTimeout(() => {
+        isSending.value = false;
+        result.value = ""; // Reset tampilan hasil scan
+      }, 3000);
     }
-
-    // biar tidak spam scan terus
-    setTimeout(() => {
-      isSending.value = false;
-    }, 2000);
   }
 };
 
