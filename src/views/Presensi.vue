@@ -25,15 +25,6 @@
       </qrcode-stream>
     </div>
 
-    <!-- Bottom Controls -->
-    <div class="bottom-controls">
-      <!-- Result Section -->
-      <div class="result-section">
-        <p class="result-label">HASIL SCAN :</p>
-        <p class="result-text">{{ result || "-" }}</p>
-      </div>
-    </div>
-
     <!-- Hidden Error Toast (optional) -->
     <div v-if="error" class="error-toast">
       {{ error }}
@@ -73,11 +64,10 @@ const onDetect = async (detectedCodes) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Accept: "application/json", // WAJIB: Agar Laravel kirim pesan error JSON
+            Authorization: "Bearer " + localStorage.getItem("token"),
           },
           body: JSON.stringify({
-            qr_token: rawValue,
-            user_id: userId,
+            qr_token: hasilQR,
           }),
         },
       );

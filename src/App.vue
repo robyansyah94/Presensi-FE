@@ -1,13 +1,9 @@
 <template>
-  <Presensi />
+  <router-view />
 </template>
 
 <script>
-import Presensi from "./views/Presensi.vue";
-
 export default {
-  components: {
-    Presensi,
-  },
+  name: "App",
 };
 </script>
