@@ -248,7 +248,10 @@ const paintOutline = (detectedCodes, ctx) => {
 .zoom-slider {
   flex: 1;
   max-width: 250px;
+  /* Versi Webkit (Chrome/Safari) */
   -webkit-appearance: none;
+  /* Versi Standar (Firefox/Edge/Modern Browser) */
+  appearance: none;
   height: 4px;
   background: #555;
   border-radius: 2px;
@@ -257,6 +260,7 @@ const paintOutline = (detectedCodes, ctx) => {
 
 .zoom-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
+  appearance: none; /* Tambahkan ini juga */
   width: 16px;
   height: 16px;
   background: #fff;
