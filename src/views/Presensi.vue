@@ -1,10 +1,9 @@
 <template>
   <div class="presensi-container">
-
     <!-- Scanner Area -->
     <div class="scanner-area">
-      <qrcode-stream 
-        @detect="onDetect" 
+      <qrcode-stream
+        @detect="onDetect"
         @error="onError"
         @camera-on="onCameraOn"
         :track="paintOutline"
@@ -18,7 +17,7 @@
             <div class="corner bottom-right"></div>
           </div>
         </div>
-        
+
         <div v-if="loading" class="camera-loading">
           <div class="loader"></div>
           <p>Memuat kamera...</p>
@@ -31,7 +30,7 @@
       <!-- Result Section -->
       <div class="result-section">
         <p class="result-label">HASIL SCAN :</p>
-        <p class="result-text">{{ result || '-' }}</p>
+        <p class="result-text">{{ result || "-" }}</p>
       </div>
     </div>
 
@@ -43,70 +42,83 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { QrcodeStream } from 'vue-qrcode-reader'
+import { ref } from "vue";
+import { QrcodeStream } from "vue-qrcode-reader";
 
-const result = ref('')
-const error = ref('')
-const loading = ref(true)
-const zoomLevel = ref(1)
+const result = ref("");
+const error = ref("");
+const loading = ref(true);
+const isSending = ref(false);
 
-const onCameraOn = (capabilities) => {
-    loading.value = false
-    // Note: Actual zoom capability depends on the device and browser support
-    // capability handling would go here if supported by the library's exposed capabilities
-}
+// sementara hardcode dulu
+// nanti ganti dari auth user login
+const userId = 1;
 
-const onDetect = (detectedCodes) => {
+const onCameraOn = () => {
+  loading.value = false;
+};
+
+const onDetect = async (detectedCodes) => {
+  if (isSending.value) return;
+
   if (detectedCodes.length > 0) {
-    const rawValue = detectedCodes[0].rawValue
-    result.value = rawValue
+    const rawValue = detectedCodes[0].rawValue;
+    result.value = rawValue;
+    isSending.value = true;
 
-    fetch('http://192.168.18.9:8000/api/presensi', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        token: rawValue
-      })
-    })
-    .then(res => res.json())
-    .then(data => {
-      console.log('RESPON LARAVEL:', data)
-      alert('Terkirim ke server!')
-    })
-    .catch(err => {
-      console.log(err)
-      alert('gagal kirim ke server')
-    })
+    try {
+      const res = await fetch(
+        "https://braydon-plausive-malaya.ngrok-free.dev/api/presensi/scan",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            qr_token: rawValue,
+            user_id: userId,
+          }),
+        },
+      );
+
+      const data = await res.json();
+      console.log("RESPON LARAVEL:", data);
+
+      alert(data.message);
+    } catch (err) {
+      console.log(err);
+      alert("Gagal kirim ke server");
+    }
+
+    // biar tidak spam scan terus
+    setTimeout(() => {
+      isSending.value = false;
+    }, 2000);
   }
-}
-
+};
 
 const onError = (err) => {
-  loading.value = false
-  // Simplified error handling
-  error.value = err.message || 'Terjadi kesalahan pada kamera'
-}
+  loading.value = false;
+  error.value = err.message || "Terjadi kesalahan pada kamera";
+};
 
-// Visual drawing function for detected codes
+// Visual drawing outline
 const paintOutline = (detectedCodes, ctx) => {
   for (const detectedCode of detectedCodes) {
-    const [firstPoint, ...otherPoints] = detectedCode.cornerPoints
-    ctx.strokeStyle = '#2196F3'
-    ctx.lineWidth = 4
-    ctx.beginPath()
-    ctx.moveTo(firstPoint.x, firstPoint.y)
+    const [firstPoint, ...otherPoints] = detectedCode.cornerPoints;
+    ctx.strokeStyle = "#2196F3";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(firstPoint.x, firstPoint.y);
     for (const { x, y } of otherPoints) {
-      ctx.lineTo(x, y)
+      ctx.lineTo(x, y);
     }
-    ctx.lineTo(firstPoint.x, firstPoint.y)
-    ctx.closePath()
-    ctx.stroke()
+    ctx.lineTo(firstPoint.x, firstPoint.y);
+    ctx.closePath();
+    ctx.stroke();
   }
-}
+};
 </script>
 
 <style scoped>
@@ -116,7 +128,7 @@ const paintOutline = (detectedCodes, ctx) => {
   height: 100vh;
   background-color: #000;
   color: #fff;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", sans-serif;
   overflow: hidden;
 }
 
@@ -150,7 +162,7 @@ const paintOutline = (detectedCodes, ctx) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,13 +181,33 @@ const paintOutline = (detectedCodes, ctx) => {
   position: absolute;
   width: 30px;
   height: 30px;
-  border: 4px solid #2196F3; /* Blue Color */
+  border: 4px solid #2196f3; /* Blue Color */
 }
 
-.top-left { top: -2px; left: -2px; border-right: none; border-bottom: none; }
-.top-right { top: -2px; right: -2px; border-left: none; border-bottom: none; }
-.bottom-left { bottom: -2px; left: -2px; border-right: none; border-top: none; }
-.bottom-right { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+.top-left {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+.top-right {
+  top: -2px;
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
+}
+.bottom-left {
+  bottom: -2px;
+  left: -2px;
+  border-right: none;
+  border-top: none;
+}
+.bottom-right {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
 
 /* Red Scan Line */
 .scan-line {
@@ -273,15 +305,17 @@ const paintOutline = (detectedCodes, ctx) => {
 .loader {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(255,255,255,0.3);
+  border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top-color: #2196F3;
+  border-top-color: #2196f3;
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 1rem;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-toast {
