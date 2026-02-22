@@ -50,7 +50,7 @@ const logout = () => {
   localStorage.removeItem("user");
 
   // redirect ke halaman login
-  router.push("/login");
+  router.push("/");
 };
 
 const result = ref("");

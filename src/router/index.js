@@ -4,7 +4,7 @@ import Presensi from "../views/Presensi.vue";
 
 const routes = [
   {
-    path: "/login",
+    path: "/",
     name: "Login",
     component: Login,
   },
@@ -26,10 +26,10 @@ router.beforeEach((to, from, next) => {
 
   // kalau belum login dan mau ke presensi → paksa ke login
   if (to.path === "/presensi" && !token) {
-    next("/login");
+    next("/");
   }
   // kalau sudah login dan buka login → paksa ke presensi
-  else if (to.path === "/login" && token) {
+  else if (to.path === "/" && token) {
     next("/presensi");
   } else {
     next();
