@@ -2,6 +2,9 @@
   <div class="presensi-container">
     <!-- Scanner Area -->
     <div class="scanner-area">
+      <!-- Logout Button -->
+      <button class="logout-btn" @click="logout">⬅ Logout</button>
+
       <qrcode-stream
         @detect="onDetect"
         @error="onError"
@@ -35,6 +38,20 @@
 <script setup>
 import { ref } from "vue";
 import { QrcodeStream } from "vue-qrcode-reader";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const logout = () => {
+  // hapus token login
+  localStorage.removeItem("token");
+
+  // optional: hapus data lain jika ada
+  localStorage.removeItem("user");
+
+  // redirect ke halaman login
+  router.push("/login");
+};
 
 const result = ref("");
 const error = ref("");
@@ -118,6 +135,25 @@ const paintOutline = (detectedCodes, ctx) => {
 </script>
 
 <style scoped>
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 1px solid #2196f3;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #2196f3;
+}
+
 .presensi-container {
   display: flex;
   flex-direction: column;
@@ -218,56 +254,6 @@ const paintOutline = (detectedCodes, ctx) => {
   /* animation: scanMove 2s infinite ease-in-out; */
 }
 
-/* Bottom Controls */
-.bottom-controls {
-  padding: 1.5rem;
-  background: #000;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding-bottom: 2rem;
-}
-
-.zoom-control {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.zoom-slider {
-  flex: 1;
-  max-width: 250px;
-  /* Versi Webkit (Chrome/Safari) */
-  -webkit-appearance: none;
-  /* Versi Standar (Firefox/Edge/Modern Browser) */
-  appearance: none;
-  height: 4px;
-  background: #555;
-  border-radius: 2px;
-  outline: none;
-}
-
-.zoom-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none; /* Tambahkan ini juga */
-  width: 16px;
-  height: 16px;
-  background: #fff;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.zoom-btn {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .result-section {
   text-align: center;
 }
@@ -327,5 +313,9 @@ const paintOutline = (detectedCodes, ctx) => {
   padding: 10px 20px;
   border-radius: 8px;
   font-size: 0.9rem;
+}
+:global(body) {
+  margin: 0;
+  padding: 0;
 }
 </style>
