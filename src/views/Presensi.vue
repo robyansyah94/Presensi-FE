@@ -58,10 +58,6 @@ const error = ref("");
 const loading = ref(true);
 const isSending = ref(false);
 
-// sementara hardcode dulu
-// nanti ganti dari auth user login
-const userId = 1;
-
 const onCameraOn = () => {
   loading.value = false;
 };
@@ -84,7 +80,7 @@ const onDetect = async (detectedCodes) => {
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
           body: JSON.stringify({
-            qr_token: hasilQR,
+            qr_token: rawValue,
           }),
         },
       );
