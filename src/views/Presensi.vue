@@ -1,36 +1,83 @@
 <template>
-  <div class="presensi-container">
-    <!-- Scanner Area -->
-    <div class="scanner-area">
-      <!-- Logout Button -->
-      <button class="logout-btn" @click="logout">⬅ Logout</button>
+  <div class="flex flex-col h-full">
+    <!-- Header -->
+    <div class="px-6 pt-8 pb-4">
+      <div class="flex justify-between items-center mb-8">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-full bg-primary/10 overflow-hidden border-2 border-white shadow-sm">
+            <img src="https://ui-avatars.com/api/?name=Johnny+Stanley&background=007770&color=fff" alt="Avatar" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <h2 class="font-bold text-gray-800 text-sm leading-tight">Johnny Stanley</h2>
+            <p class="text-xs text-gray-500">Senior HR</p>
+          </div>
+        </div>
+        <button class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm border border-gray-100">
+          <ScanIcon :size="20" class="text-gray-400" />
+        </button>
+      </div>
 
-      <qrcode-stream
-        @detect="onDetect"
-        @error="onError"
-        @camera-on="onCameraOn"
-        :track="paintOutline"
-      >
-        <div class="scan-overlay">
-          <div class="scan-box">
-            <div class="scan-line"></div>
-            <div class="corner top-left"></div>
-            <div class="corner top-right"></div>
-            <div class="corner bottom-left"></div>
-            <div class="corner bottom-right"></div>
+      <!-- Title Area -->
+      <div class="mb-6 text-center">
+        <h1 class="text-2xl font-bold text-gray-800">Scan QR Presensi</h1>
+        <p class="text-sm text-gray-400 px-4">Arahkan kamera ke QR Code dinamis yang disediakan oleh HRD.</p>
+      </div>
+    </div>
+
+    <!-- Scanner Section (Existing logic maintained) -->
+    <div class="flex-1 px-6 pb-6 flex flex-col items-center">
+      <div class="w-full aspect-square max-w-sm rounded-[3rem] overflow-hidden border-[10px] border-white shadow-2xl relative mb-8">
+        <qrcode-stream
+          @detect="onDetect"
+          @error="onError"
+          @camera-on="onCameraOn"
+          class="h-full w-full object-cover"
+        >
+          <!-- Scan Overlay -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+             <!-- Scanner line animation -->
+             <div class="w-4/5 h-[2px] bg-primary shadow-[0_0_15px_rgba(0,119,112,0.8)] absolute animate-scan-y top-1/2"></div>
+             
+             <!-- Corner brackets -->
+             <div class="absolute inset-x-12 inset-y-12">
+               <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white/80 rounded-tl-xl"></div>
+               <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white/80 rounded-tr-xl"></div>
+               <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white/80 rounded-bl-xl"></div>
+               <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white/80 rounded-br-xl"></div>
+             </div>
+          </div>
+          
+          <div v-if="loading" class="absolute inset-0 bg-primary/20 backdrop-blur-md flex flex-col items-center justify-center text-white p-6 text-center">
+             <div class="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin mb-4"></div>
+             <p class="text-sm font-bold">Mempersiapkan Kamera...</p>
+          </div>
+        </qrcode-stream>
+      </div>
+
+      <!-- Status Cards -->
+      <div class="grid grid-cols-2 gap-4 w-full">
+        <!-- Card 1: Masuk -->
+        <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <LogInIcon :size="24" class="text-primary" />
+          </div>
+          <div class="text-center">
+            <div class="text-[10px] font-black uppercase text-gray-400 tracking-wider">Presensi</div>
+            <div class="text-sm font-bold text-gray-800 leading-tight">Masuk Kerja</div>
           </div>
         </div>
 
-        <div v-if="loading" class="camera-loading">
-          <div class="loader"></div>
-          <p>Memuat kamera...</p>
+        <!-- Card 2: Pulang -->
+        <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center gap-3 opacity-60">
+          <div class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center rotate-180">
+            <LogInIcon :size="24" class="text-rose-500" />
+          </div>
+          <div class="text-center">
+            <div class="text-[10px] font-black uppercase text-gray-400 tracking-wider text-rose-500/50">Presensi</div>
+            <div class="text-sm font-bold text-gray-800 leading-tight">Pulang Kerja</div>
+          </div>
         </div>
-      </qrcode-stream>
-    </div>
-
-    <!-- Hidden Error Toast (optional) -->
-    <div v-if="error" class="error-toast">
-      {{ error }}
+      </div>
     </div>
   </div>
 </template>
@@ -39,22 +86,10 @@
 import { ref } from "vue";
 import { QrcodeStream } from "vue-qrcode-reader";
 import { useRouter } from "vue-router";
+import { LogIn as LogInIcon, Scan as ScanIcon } from 'lucide-vue-next';
 
 const router = useRouter();
 
-const logout = () => {
-  // hapus token login
-  localStorage.removeItem("token");
-
-  // optional: hapus data lain jika ada
-  localStorage.removeItem("user");
-
-  // redirect ke halaman login
-  router.push("/");
-};
-
-const result = ref("");
-const error = ref("");
 const loading = ref(true);
 const isSending = ref(false);
 
@@ -67,7 +102,6 @@ const onDetect = async (detectedCodes) => {
 
   if (detectedCodes.length > 0) {
     const rawValue = detectedCodes[0].rawValue;
-    result.value = rawValue;
     isSending.value = true;
 
     try {
@@ -77,7 +111,8 @@ const onDetect = async (detectedCodes) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer " + localStorage.getItem("token"),
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            "ngrok-skip-browser-warning": "true",
           },
           body: JSON.stringify({
             qr_token: rawValue,
@@ -88,20 +123,16 @@ const onDetect = async (detectedCodes) => {
       const data = await res.json();
 
       if (res.ok) {
-        // Jika status 200 (Berhasil)
         alert("✅ " + data.message);
       } else {
-        // Jika status 400 atau 404 (QR Expired, Karyawan Tidak Ditemukan, dll)
         alert("❌ " + (data.message || "Gagal Presensi"));
       }
     } catch (err) {
       console.error("ERROR_SCAN:", err);
       alert("📡 Masalah Koneksi ke Server");
     } finally {
-      // Tunggu 3 detik sebelum mengizinkan scan lagi (mencegah double tap)
       setTimeout(() => {
         isSending.value = false;
-        result.value = ""; // Reset tampilan hasil scan
       }, 3000);
     }
   }
@@ -109,209 +140,19 @@ const onDetect = async (detectedCodes) => {
 
 const onError = (err) => {
   loading.value = false;
-  error.value = err.message || "Terjadi kesalahan pada kamera";
-};
-
-// Visual drawing outline
-const paintOutline = (detectedCodes, ctx) => {
-  for (const detectedCode of detectedCodes) {
-    const [firstPoint, ...otherPoints] = detectedCode.cornerPoints;
-    ctx.strokeStyle = "#2196F3";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(firstPoint.x, firstPoint.y);
-    for (const { x, y } of otherPoints) {
-      ctx.lineTo(x, y);
-    }
-    ctx.lineTo(firstPoint.x, firstPoint.y);
-    ctx.closePath();
-    ctx.stroke();
-  }
+  console.error("CAMERA_ERROR:", err);
+  alert("Error Kamera: " + (err.name || err.message));
 };
 </script>
 
 <style scoped>
-.logout-btn {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 10;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  border: 1px solid #2196f3;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: 0.3s;
+@keyframes scan {
+  0% { top: 20%; transform: translateY(0); }
+  50% { top: 80%; transform: translateY(-100%); }
+  100% { top: 20%; transform: translateY(0); }
 }
 
-.logout-btn:hover {
-  background: #2196f3;
-}
-
-.presensi-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-color: #000;
-  color: #fff;
-  font-family: "Segoe UI", sans-serif;
-  overflow: hidden;
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  color: white;
-  padding: 8px;
-  cursor: pointer;
-}
-
-.app-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.spacer {
-  width: 40px; /* Balance the menu button */
-}
-
-/* Scanner Area */
-.scanner-area {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-.scan-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.scan-box {
-  width: 70%;
-  max-width: 300px;
-  aspect-ratio: 1;
-  position: relative;
-  /* border: 1px solid rgba(255, 255, 255, 0.2); */
-}
-
-/* Corners */
-.corner {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  border: 4px solid #2196f3; /* Blue Color */
-}
-
-.top-left {
-  top: -2px;
-  left: -2px;
-  border-right: none;
-  border-bottom: none;
-}
-.top-right {
-  top: -2px;
-  right: -2px;
-  border-left: none;
-  border-bottom: none;
-}
-.bottom-left {
-  bottom: -2px;
-  left: -2px;
-  border-right: none;
-  border-top: none;
-}
-.bottom-right {
-  bottom: -2px;
-  right: -2px;
-  border-left: none;
-  border-top: none;
-}
-
-/* Red Scan Line */
-.scan-line {
-  position: absolute;
-  width: 100%;
-  height: 1px;
-  background: red;
-  box-shadow: 0 0 4px red;
-  top: 50%;
-  transform: translateY(-50%);
-  /* If animation is desired: */
-  /* animation: scanMove 2s infinite ease-in-out; */
-}
-
-.result-section {
-  text-align: center;
-}
-
-.result-label {
-  color: #aaa;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  margin: 0;
-}
-
-.result-text {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #fff;
-  margin: 0.2rem 0 0 0;
-  min-height: 1.8rem;
-}
-
-/* Loading */
-.camera-loading {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #1a1a1a;
-  z-index: 5;
-}
-
-.loader {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #2196f3;
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.error-toast {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 0, 0, 0.8);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-}
-:global(body) {
-  margin: 0;
-  padding: 0;
+.animate-scan-y {
+  animation: scan 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>
