@@ -1,0 +1,1 @@
+export const BASE_URL = "https://braydon-plausive-malaya.ngrok-free.dev"

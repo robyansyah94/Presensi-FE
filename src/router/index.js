@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+
 import Login from "../views/Login.vue";
 import Home from "../views/Home.vue";
 import History from "../views/History.vue";
@@ -12,10 +13,12 @@ const routes = [
     path: "/",
     name: "Login",
     component: Login,
+    meta: { guestOnly: true }, // hanya untuk yang belum login
   },
   {
     path: "/",
     component: MainLayout,
+    meta: { requiresAuth: true }, // semua child wajib login
     children: [
       {
         path: "home",
@@ -42,7 +45,7 @@ const routes = [
         name: "Profile",
         component: Profile,
       },
-    ]
+    ],
   },
 ];
 
@@ -51,20 +54,21 @@ const router = createRouter({
   routes,
 });
 
-// PROTEKSI ROUTE
+// 🔐 ROUTE GUARD CLEAN VERSION
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
 
-  // kalau belum login dan mau ke halaman berproteksi → paksa ke login
-  if (to.path !== "/" && !token) {
-    next("/");
+  // kalau butuh login tapi tidak ada token
+  if (to.meta.requiresAuth && !token) {
+    return next("/");
   }
-  // kalau sudah login dan buka login → paksa ke home
-  else if (to.path === "/" && token) {
-    next("/home");
-  } else {
-    next();
+
+  // kalau halaman khusus guest tapi sudah login
+  if (to.meta.guestOnly && token) {
+    return next("/home");
   }
+
+  next();
 });
 
 export default router;
