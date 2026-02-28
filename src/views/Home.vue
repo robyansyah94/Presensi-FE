@@ -1,7 +1,7 @@
 <template>
   <div class="px-6 pt-8 pb-4">
     <!-- Header -->
-    <div v-if="user" class="flex items-center gap-3">
+    <div v-if="user" class="flex items-center gap-3 mb-7">
       <div
         class="w-12 h-12 rounded-full bg-primary/10 overflow-hidden border-2 border-white shadow-sm"
       >
@@ -21,13 +21,6 @@
           {{ user.jabatan ?? "Belum ada jabatan" }}
         </p>
       </div>
-    </div>
-
-    <!-- Hero Title -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-800 leading-tight">
-        Work Better,<br />Grow Together
-      </h1>
     </div>
 
     <!-- Real-time Clock Card -->

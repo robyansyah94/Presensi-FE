@@ -6,6 +6,7 @@ import History from "../views/History.vue";
 import Presensi from "../views/Presensi.vue";
 import Submission from "../views/Submission.vue";
 import Profile from "../views/Profile.vue";
+import Scanner from "../views/Scanner.vue";
 import MainLayout from "../components/MainLayout.vue";
 
 const routes = [
@@ -46,6 +47,12 @@ const routes = [
         component: Profile,
       },
     ],
+  },
+  {
+    path: "/scanner",
+    name: "Scanner",
+    component: Scanner,
+    meta: { requiresAuth: true }, // wajib login
   },
 ];
 
