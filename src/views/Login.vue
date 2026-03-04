@@ -21,7 +21,7 @@
             Silahkan login untuk masuk ke aplikasi presensi Anda.
           </p>
         </div>
-
+ 
         <div class="space-y-5">
           <div class="space-y-1.5">
             <label
@@ -36,7 +36,7 @@
               <input
                 v-model="email"
                 type="email"
-                placeholder="nama@perusahaan.com"
+                placeholder="nama@gmail.com"
                 class="w-full bg-white border border-gray-100 py-4 pl-12 pr-4 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
               />
             </div>
@@ -61,12 +61,6 @@
             </div>
           </div>
 
-          <div class="flex justify-end">
-            <button class="text-xs font-bold text-primary hover:underline">
-              Lupa Password?
-            </button>
-          </div>
-
           <button
             @click="login"
             :disabled="loading"
@@ -79,13 +73,6 @@
             <span v-else>Masuk Sekarang</span>
           </button>
         </div>
-      </div>
-
-      <!-- Bottom Footer -->
-      <div class="mt-auto text-center">
-        <p class="text-xs text-gray-400 font-medium">
-          &copy; 2024 Perusahaan IT. Semua Hak Dilindungi.
-        </p>
       </div>
     </div>
   </div>

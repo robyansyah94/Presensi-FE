@@ -1,174 +1,188 @@
 <template>
-  <div class="px-6 pt-8 pb-4">
-    <!-- Profile Header/Card -->
-    <div
-      class="bg-primary rounded-3xl p-8 text-white relative overflow-hidden mb-8 shadow-xl shadow-primary/20"
-    >
-      <div class="relative z-10 flex flex-col items-center">
+  <div class="flex flex-col min-h-full bg-gray-50 pb-28">
+
+    <!-- ── Hero Section (full-width, rounded bawah, sesuai referensi) ── -->
+    <div class="bg-primary pt-7 pb-5 px-6 flex flex-col items-center rounded-b-[2.5rem] shadow-lg shadow-primary/20 mb-5">
+
+      <!-- Judul halaman -->
+      <h1 class="text-white text-lg font-bold text-center mb-6 tracking-wide">
+        Profil Karyawan
+      </h1>
+
+      <!-- Avatar -->
+      <div class="relative mb-5">
+        <div class="w-28 h-28 rounded-full border-4 border-white/30 overflow-hidden shadow-lg">
+          <img :src="profileImage" alt="Foto Profil" class="w-full h-full object-cover" />
+        </div>
+        <!-- Camera badge -->
+        <div class="absolute bottom-1 right-1 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center border-2 border-primary shadow-md">
+          <CameraIcon :size="15" class="text-white" />
+        </div>
+      </div>
+
+      <!-- Nama -->
+      <h2 class="text-white text-xl font-semibold uppercase tracking-wide text-center mb-3">
+        {{ user?.name ?? '—' }}
+      </h2>
+
+      <!-- Badge NIP & Jabatan -->
+      <div class="flex items-center gap-2 px-5 py-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm">
+        <span class="text-white/90 text-xs font-semibold">{{ user?.nip ?? 'NIP -' }}</span>
+        <span class="text-white/90 text-xs">•</span>
+        <span class="text-white/90 text-xs font-semibold">{{ user?.jabatan ?? 'Jabatan -' }}</span>
+      </div>
+
+    </div>
+
+    <!-- ── Biodata Karyawan ── -->
+    <div class="mx-6 bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+      <p class="px-5 pt-5 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Biodata Karyawan</p>
+
+      <div
+        v-for="(item, i) in biodataItems"
+        :key="i"
+        class="flex items-center gap-4 px-5 py-4"
+        :class="i < biodataItems.length - 1 ? 'border-b border-gray-50' : ''"
+      >
+        <!-- Icon -->
         <div
-          class="w-24 h-24 rounded-3xl bg-white/20 p-1 backdrop-blur-md mb-4 border border-white/30 overflow-hidden"
+          class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+          :style="{ background: item.iconBg }"
         >
-          <img
-            :src="profileImage"
-            alt="Profile"
-            class="w-full h-full object-cover rounded-2xl"
-          />
+          <component :is="item.icon" :size="18" :style="{ color: item.iconColor }" />
         </div>
-        <h2 class="text-xl font-bold">{{ user?.name }}</h2>
-        <p class="text-primary-light/80 text-sm font-medium mb-4">
-          {{ user?.nip ?? "NIP tidak tersedia" }} - {{ user?.jabatan ?? "Jabatan tidak tersedia" }}
-        </p>
 
-        <div class="flex gap-3 w-full">
-          <button
-            class="flex-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm py-2.5 rounded-xl text-xs font-bold transition-colors"
-          >
-            Edit Profil
-          </button>
-          <button
-            @click="logout"
-            class="flex-1 bg-rose-500/80 hover:bg-rose-500 py-2.5 rounded-xl text-xs font-bold transition-colors"
-          >
-            Logout
-          </button>
+        <!-- Text -->
+        <div class="flex flex-col min-w-0">
+          <span class="text-[11px] font-semibold text-gray-400">{{ item.label }}</span>
+          <span class="text-sm font-bold text-gray-800 truncate">{{ item.value || '—' }}</span>
         </div>
-      </div>
-      <!-- Decorative circle -->
-      <div
-        class="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-white/10 blur-2xl"
-      ></div>
-    </div>
-
-    <!-- Stats Row -->
-    <div class="grid grid-cols-3 gap-3 mb-8">
-      <div
-        class="bg-white p-4 rounded-2xl border border-gray-100 flex flex-col items-center"
-      >
-        <span
-          class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-1"
-          >Hadir</span
-        >
-        <span class="text-lg font-black text-primary">22</span>
-      </div>
-      <div
-        class="bg-white p-4 rounded-2xl border border-gray-100 flex flex-col items-center"
-      >
-        <span
-          class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-1"
-          >Izin</span
-        >
-        <span class="text-lg font-black text-amber-500">2</span>
-      </div>
-      <div
-        class="bg-white p-4 rounded-2xl border border-gray-100 flex flex-col items-center"
-      >
-        <span
-          class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter mb-1"
-          >Sakit</span
-        >
-        <span class="text-lg font-black text-rose-500">1</span>
       </div>
     </div>
 
-    <!-- Menu List -->
-    <div class="space-y-3">
-      <div
-        v-for="(item, index) in menuItems"
-        :key="index"
-        class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between group active:bg-gray-50 transition-colors"
+    <!-- ── Logout Button ── -->
+    <div class="mx-6 mt-5">
+      <button
+        @click="logout"
+        class="w-full flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-bold text-sm py-4 rounded-2xl shadow-md shadow-rose-200 transition-all active:scale-95"
       >
-        <div class="flex items-center gap-3">
-          <div
-            :class="`w-10 h-10 rounded-xl flex items-center justify-center ${item.bg}`"
-          >
-            <component :is="item.icon" :size="20" :class="item.color" />
-          </div>
-          <div class="text-sm font-bold text-gray-700">{{ item.label }}</div>
-        </div>
-        <ChevronRightIcon
-          :size="18"
-          class="text-gray-300 group-hover:text-primary transition-colors"
-        />
-      </div>
+        <LogOutIcon :size="18" />
+        Logout
+      </button>
     </div>
+
   </div>
 </template>
 
 <script setup>
-import { useRouter } from "vue-router";
-import { ref, onMounted, computed } from "vue";
-import api from "@/plugins/axios";
-import { BASE_URL } from "@/config";
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '@/plugins/axios'
+import { BASE_URL } from '@/config'
 import {
-  ChevronRight as ChevronRightIcon,
+  Camera as CameraIcon,
+  LogOut as LogOutIcon,
   User as UserIcon,
-  ShieldCheck as ShieldIcon,
-  Settings as SettingsIcon,
-  HelpCircle as HelpIcon,
-  Info as InfoIcon,
-} from "lucide-vue-next";
+  IdCard as IdCardIcon,
+  Briefcase as BriefcaseIcon,
+  Phone as PhoneIcon,
+  Mail as MailIcon,
+  MapPin as MapPinIcon,
+  CalendarDays as CalendarIcon,
+} from 'lucide-vue-next'
 
-const router = useRouter();
-const user = ref(null);
+const router = useRouter()
+const user = ref(null)
 
 const fetchUser = async () => {
   try {
-    const response = await api.get("/me");
-    user.value = response.data;
+    const response = await api.get('/me')
+    user.value = response.data
   } catch (error) {
-    console.error("Gagal ambil user", error);
+    console.error('Gagal ambil user', error)
   }
-};
+}
 
 onMounted(() => {
-  fetchUser();
-});
+  fetchUser()
+})
 
 const logout = () => {
-  localStorage.removeItem("token");
-  router.push("/");
-};
+  localStorage.removeItem('token')
+  router.push('/')
+}
 
 const profileImage = computed(() => {
-  if (!user.value) return "";
+  if (!user.value) return ''
+  if (user.value.foto) return `${BASE_URL}/storage/${user.value.foto}`
+  return `https://ui-avatars.com/api/?name=${user.value?.name}&background=007770&color=fff`
+})
 
-  if (user.value.foto) {
-    return `${BASE_URL}/storage/${user.value.foto}`;
-  }
+const formatTanggal = (tanggal) => {
+  if (!tanggal) return null
+  
+  // Handle format "YYYY-MM-DD" dari Laravel/MySQL
+  const normalized = tanggal.includes('T') ? tanggal : tanggal.replace(' ', 'T')
+  const date = new Date(normalized)
+  
+  if (isNaN(date.getTime())) return tanggal // fallback tampilkan raw value
+  
+  return date.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
 
-  return `https://ui-avatars.com/api/?name=${user.value?.name}&background=007770&color=fff`;
-});
-
-const menuItems = [
+const biodataItems = computed(() => [
   {
-    label: "Informasi Pribadi",
+    label: 'Nama Lengkap',
+    value: user.value?.name,
     icon: UserIcon,
-    bg: "bg-primary/5",
-    color: "text-primary",
+    iconBg: '#e8f5f4',
+    iconColor: '#007770',
   },
   {
-    label: "Keamanan Akun",
-    icon: ShieldIcon,
-    bg: "bg-emerald-50",
-    color: "text-emerald-500",
+    label: 'NIP',
+    value: user.value?.nip,
+    icon: IdCardIcon,
+    iconBg: '#e8f5f4',
+    iconColor: '#007770',
   },
   {
-    label: "Pengaturan Aplikasi",
-    icon: SettingsIcon,
-    bg: "bg-gray-50",
-    color: "text-gray-500",
+    label: 'Jabatan',
+    value: user.value?.jabatan,
+    icon: BriefcaseIcon,
+    iconBg: '#edf6ee',
+    iconColor: '#2d9e4f',
   },
   {
-    label: "Pusat Bantuan",
-    icon: HelpIcon,
-    bg: "bg-blue-50",
-    color: "text-blue-500",
+    label: 'No. Telepon',
+    value: user.value?.no_hp,
+    icon: PhoneIcon,
+    iconBg: '#f0fdf4',
+    iconColor: '#16a34a',
   },
   {
-    label: "Tentang Aplikasi",
-    icon: InfoIcon,
-    bg: "bg-purple-50",
-    color: "text-purple-500",
+    label: 'Email',
+    value: user.value?.email,
+    icon: MailIcon,
+    iconBg: '#fdf2ff',
+    iconColor: '#9333ea',
   },
-];
+  {
+    label: 'Tanggal Bergabung',
+    value: formatTanggal(user.value?.tanggal_bergabung),
+    icon: CalendarIcon,
+    iconBg: '#fff1f2',
+    iconColor: '#e11d48',
+  },
+  {
+    label: 'Alamat',
+    value: user.value?.alamat,
+    icon: MapPinIcon,
+    iconBg: '#fef9c3',
+    iconColor: '#ca8a04',
+  },
+])
 </script>

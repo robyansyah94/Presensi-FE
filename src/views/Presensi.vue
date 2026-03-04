@@ -8,16 +8,16 @@
             class="w-12 h-12 rounded-full bg-primary/10 overflow-hidden border-2 border-white shadow-sm"
           >
             <img
-              src="https://ui-avatars.com/api/?name=Johnny+Stanley&background=007770&color=fff"
-              alt="Avatar"
-              class="w-full h-full object-cover"
+              :src="profileImage"
+              alt="Profile"
+              class="w-full h-full object-cover rounded-2xl"
             />
           </div>
           <div>
             <h2 class="font-bold text-gray-800 text-sm leading-tight">
-              Johnny Stanley
+              NAMA
             </h2>
-            <p class="text-xs text-gray-500">Senior HR</p>
+            <p class="text-xs text-gray-500">JABATAN</p>
           </div>
         </div>
       </div>
@@ -98,9 +98,8 @@ onMounted(() => {
 });
 
 const goToScanner = (type) => {
-  router.push({ path: '/scanner', query: { type } });
+  router.push({ path: "/scanner", query: { type } });
 };
+
 </script>
 
-<style scoped>
-</style>
