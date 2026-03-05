@@ -1,27 +1,12 @@
 <template>
   <div class="px-6 pt-8 pb-4">
-    <!-- Header -->
-    <div v-if="user" class="flex items-center gap-3 mb-7">
-      <div
-        class="w-12 h-12 rounded-full bg-primary/10 overflow-hidden border-2 border-white shadow-sm"
+    <AppHeader class="mb-7">
+      <button
+        class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm border border-gray-100"
       >
-        <img
-          :src="profileImage"
-          alt="Profile"
-          class="w-full h-full object-cover rounded-2xl"
-        />
-        alt="Avatar" class="w-full h-full object-cover" />
-      </div>
-
-      <div>
-        <h2 class="font-bold text-gray-800 text-sm leading-tight">
-          {{ user.name }}
-        </h2>
-        <p class="text-xs text-gray-500">
-          {{ user.jabatan ?? "Belum ada jabatan" }}
-        </p>
-      </div>
-    </div>
+        <BellIcon :size="20" class="text-gray-400" />
+      </button>
+    </AppHeader>
 
     <!-- Real-time Clock Card -->
     <div
@@ -34,6 +19,7 @@
         <div class="text-4xl font-black tracking-wider mb-4">
           {{ currentTime }}
         </div>
+
         <div
           class="flex items-center gap-1.5 bg-white/20 w-max px-3 py-1 rounded-full text-[10px] font-bold backdrop-blur-sm"
         >
@@ -43,21 +29,20 @@
           Waktu Sekarang
         </div>
       </div>
-      <!-- Decorative circle -->
+
       <div
         class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-white/10 blur-2xl"
       ></div>
     </div>
 
-    <!-- Attendance Summary Grid -->
+    <!-- Attendance Summary -->
     <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-8">
-      <!-- Clock In Card -->
       <div
         class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md active:scale-95"
       >
         <div class="flex items-center justify-between mb-3">
           <span
-            class="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none"
+            class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
             >Clock In</span
           >
           <div
@@ -66,16 +51,16 @@
             <LogInIcon :size="14" class="text-emerald-500" />
           </div>
         </div>
+
         <div class="text-lg font-bold text-gray-800">08 : 25</div>
       </div>
 
-      <!-- Clock Out Card -->
       <div
         class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md active:scale-95"
       >
         <div class="flex items-center justify-between mb-3">
           <span
-            class="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none"
+            class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
             >Clock Out</span
           >
           <div
@@ -84,13 +69,15 @@
             <LogInIcon :size="14" class="text-rose-500" />
           </div>
         </div>
+
         <div class="text-lg font-bold text-gray-800">-- : --</div>
       </div>
     </div>
 
-    <!-- Section Title -->
+    <!-- Section -->
     <div class="flex justify-between items-center mb-4">
       <h3 class="font-bold text-gray-800">Kehadiran</h3>
+
       <button
         class="text-xs font-bold text-primary px-3 py-1 rounded-full bg-primary/5"
       >
@@ -98,7 +85,6 @@
       </button>
     </div>
 
-    <!-- Empty State / Coming Soon -->
     <div
       class="bg-white rounded-3xl p-10 flex flex-col items-center justify-center border border-dashed border-gray-200 opacity-60"
     >
@@ -111,9 +97,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from "vue";
-import api from "@/plugins/axios";
-import { BASE_URL } from "@/config";
+import { ref, onMounted, onUnmounted } from "vue";
+import AppHeader from "@/components/AppHeader.vue";
+
 import {
   Bell as BellIcon,
   LogIn as LogInIcon,
@@ -122,26 +108,6 @@ import {
 
 const currentTime = ref("");
 const currentDate = ref("");
-const user = ref(null);
-
-const fetchUser = async () => {
-  try {
-    const response = await api.get("/me");
-    user.value = response.data;
-  } catch (error) {
-    console.error("Gagal ambil user", error);
-  }
-};
-
-const profileImage = computed(() => {
-  if (!user.value) return "";
-
-  if (user.value.foto) {
-    return `${BASE_URL}/storage/${user.value.foto}`;
-  }
-
-  return `https://ui-avatars.com/api/?name=${user.value?.name}&background=007770&color=fff`;
-});
 
 const updateTime = () => {
   const now = new Date();
@@ -164,7 +130,6 @@ const updateTime = () => {
 let timer;
 
 onMounted(() => {
-  fetchUser();
   updateTime();
   timer = setInterval(updateTime, 1000);
 });
