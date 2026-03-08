@@ -3,7 +3,7 @@
     <div
       class="w-full max-w-md bg-black h-full flex flex-col relative shadow-2xl overflow-hidden"
     >
-      <!-- Header (sama seperti sebelumnya) -->
+      <!-- Header -->
       <div
         class="bg-primary px-6 pt-3 pb-4 flex items-center z-10 shadow-lg relative rounded-b-[2rem]"
       >
@@ -18,7 +18,7 @@
         </h1>
       </div>
 
-      <!-- Scanner Section (sama seperti sebelumnya) -->
+      <!-- Scanner Section -->
       <div
         class="flex-1 relative bg-black flex flex-col items-center justify-center overflow-hidden w-full"
       >
@@ -79,8 +79,7 @@
         </qrcode-stream>
       </div>
 
-      <!-- ── STATUS GPS BAR (BARU) ─────────────────────────────────────── -->
-      <!-- Bar ini tampil di bawah layar, memberi tahu karyawan status GPS -->
+      <!-- STATUS GPS BAR -->
       <div class="px-4 py-3 bg-gray-900 flex items-center gap-2 z-10">
         <div
           :class="[
@@ -108,47 +107,87 @@ import { QrcodeStream } from "vue-qrcode-reader";
 import { useRouter } from "vue-router";
 import { ArrowLeft as ArrowLeftIcon } from "lucide-vue-next";
 import api from "@/services/api";
+import Swal from "sweetalert2";
 
 const router = useRouter();
 
 // ── State UI ──────────────────────────────────────────────────────────────────
 const cameraLoading = ref(true);
 const processing = ref(false);
-const isSending = ref(false); // proteksi agar tidak double-scan
+const isSending = ref(false);
 
-// ── State GPS (BARU) ──────────────────────────────────────────────────────────
-const gpsReady = ref(false); // true kalau GPS sudah dapat koordinat
-const gpsAccuracy = ref(null); // akurasi GPS dalam meter
-const latitude = ref(null); // koordinat terakhir
+// ── State GPS ─────────────────────────────────────────────────────────────────
+const gpsReady = ref(false);
+const gpsAccuracy = ref(null);
+const latitude = ref(null);
 const longitude = ref(null);
-let watchId = null; // id untuk clearWatch nanti
+let watchId = null;
 
-// ── GPS: mulai tracking lokasi ─────────────────────────────────────────────────
-// Kita pakai watchPosition (bukan getCurrentPosition) supaya koordinat
-// terus diperbarui selama halaman Scanner terbuka
+// ── Helper: SweetAlert toast (pojok atas tengah, tanpa tombol) ────────────────
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  },
+});
+
+// ── Helper: alert sukses (full modal, ada tombol OK) ─────────────────────────
+const alertSukses = (message) =>
+  Swal.fire({
+    icon: "success",
+    title: "Berhasil!",
+    text: message,
+    confirmButtonText: "OK",
+    confirmButtonColor: "#4f46e5",
+    timer: 4000,
+    timerProgressBar: true,
+  });
+
+// ── Helper: alert error ───────────────────────────────────────────────────────
+const alertError = (message) =>
+  Swal.fire({
+    icon: "error",
+    title: "Gagal",
+    text: message,
+    confirmButtonText: "Coba Lagi",
+    confirmButtonColor: "#ef4444",
+  });
+
+// ── Helper: alert warning (toast) ────────────────────────────────────────────
+const alertWarning = (title, message) =>
+  Toast.fire({
+    icon: "warning",
+    title: title,
+    text: message,
+  });
+
+// ── GPS ───────────────────────────────────────────────────────────────────────
 const startGPS = () => {
   if (!navigator.geolocation) {
-    alert("Perangkat ini tidak mendukung GPS.");
+    alertError("Perangkat ini tidak mendukung GPS.");
     return;
   }
 
   watchId = navigator.geolocation.watchPosition(
     (position) => {
-      // Berhasil dapat koordinat → simpan dan tandai GPS siap
       latitude.value = position.coords.latitude;
       longitude.value = position.coords.longitude;
       gpsAccuracy.value = Math.round(position.coords.accuracy);
       gpsReady.value = true;
     },
     (err) => {
-      // Gagal → tandai GPS belum siap
       gpsReady.value = false;
       console.error("GPS Error:", err.message);
     },
     {
-      enableHighAccuracy: true, // minta akurasi tinggi (pakai GPS, bukan WiFi)
-      maximumAge: 5000, // boleh pakai cache koordinat max 5 detik
-      timeout: 15000, // timeout 15 detik
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 15000,
     },
   );
 };
@@ -160,12 +199,10 @@ onMounted(() => {
     router.push("/");
     return;
   }
-  startGPS(); // mulai GPS begitu halaman terbuka
+  startGPS();
 });
 
 onUnmounted(() => {
-  // Penting: hentikan GPS tracking saat keluar dari halaman
-  // supaya tidak boros baterai
   if (watchId !== null) {
     navigator.geolocation.clearWatch(watchId);
   }
@@ -179,20 +216,21 @@ const onCameraOn = () => {
 const onError = (err) => {
   cameraLoading.value = false;
   console.error("CAMERA_ERROR:", err);
-  alert("Error Kamera: " + (err.name || err.message));
+  alertError("Error Kamera: " + (err.name || err.message));
 };
 
 // ── QR Detect ─────────────────────────────────────────────────────────────────
 const onDetect = async (detectedCodes) => {
-  if (isSending.value) return; // cegah double scan
+  if (isSending.value) return;
 
   const rawValue = detectedCodes[0]?.rawValue;
   if (!rawValue) return;
 
-  // Cek GPS dulu sebelum kirim ke server
+  // GPS belum siap
   if (!gpsReady.value || latitude.value === null) {
-    alert(
-      "GPS belum siap. Tunggu beberapa detik lalu scan ulang.\n\nPastikan GPS aktif di pengaturan HP.",
+    alertWarning(
+      "GPS Belum Siap",
+      "Tunggu beberapa detik lalu scan ulang. Pastikan GPS aktif di pengaturan HP.",
     );
     return;
   }
@@ -201,22 +239,61 @@ const onDetect = async (detectedCodes) => {
   processing.value = true;
 
   try {
-    // ── PERUBAHAN UTAMA ───────────────────────────────────────────────
-    // Sebelum: hanya kirim { qr_token }
-    // Sesudah: kirim juga latitude & longitude agar backend bisa validasi GPS
     const { data } = await api.post("/presensi/scan", {
       qr_token: rawValue,
-      latitude: latitude.value, // ← BARU
-      longitude: longitude.value, // ← BARU
+      latitude: latitude.value,
+      longitude: longitude.value,
     });
-    // ─────────────────────────────────────────────────────────────────
 
-    alert("✅ " + data.message);
+    // Sukses → tampilkan modal lalu redirect
+    await alertSukses(data.message);
     router.push("/presensi");
   } catch (error) {
     const msg = error.response?.data?.message || "Gagal melakukan presensi.";
-    alert("❌ " + msg);
-    // Tidak redirect → biarkan karyawan coba lagi (misal kalau GPS meleset)
+
+    // Bedakan error GPS (403) vs error lain
+    const status = error.response?.status;
+    if (status === 403) {
+      // Di luar radius → tampilkan info jarak
+      const jarak = error.response?.data?.jarak;
+      const radius = error.response?.data?.radius_kantor;
+      await Swal.fire({
+        icon: "warning",
+        title: "Di Luar Area Kantor",
+        html: `
+          <p class="text-gray-600 text-sm mb-3">${msg}</p>
+          ${
+            jarak
+              ? `
+          <div class="flex justify-center gap-6 mt-2">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-red-500">${jarak}m</div>
+              <div class="text-xs text-gray-400">Jarak Anda</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-green-500">${radius}m</div>
+              <div class="text-xs text-gray-400">Batas Radius</div>
+            </div>
+          </div>`
+              : ""
+          }
+        `,
+        confirmButtonText: "Mengerti",
+        confirmButtonColor: "#f59e0b",
+      });
+    } else if (status === 400) {
+      // QR expired atau sudah presensi
+      await Swal.fire({
+        icon: "info",
+        title: "Perhatian",
+        text: msg,
+        confirmButtonText: "OK",
+        confirmButtonColor: "#6366f1",
+      });
+    } else {
+      // Error umum
+      await alertError(msg);
+    }
   } finally {
     processing.value = false;
     setTimeout(() => {
