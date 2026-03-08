@@ -251,31 +251,35 @@ const onDetect = async (detectedCodes) => {
   } catch (error) {
     const msg = error.response?.data?.message || "Gagal melakukan presensi.";
     const status = error.response?.status;
-    const jarak = error.response?.data?.jarak; // ada kalau di luar radius
+    const jarak = error.response?.data?.jarak;
     const radius = error.response?.data?.radius_kantor;
 
-    if (status === 403 && jarak !== undefined) {
-      // ── Di luar radius kantor (ada data jarak di response) ────────────
+    // Deteksi berdasarkan ada/tidaknya field 'jarak' di response
+    // Backend hanya mengirim 'jarak' saat error di luar radius
+    const isLuarRadius = status === 403 && jarak !== undefined;
+    const isTidakAdaShift = status === 403 && jarak === undefined;
+
+    if (isLuarRadius) {
+      // ── Di luar radius kantor ─────────────────────────────────────────
       await Swal.fire({
         icon: "warning",
         title: "Di Luar Area Kantor",
         html: `
-          <p style="color:#6b7280; font-size:14px; margin-bottom:12px;">${msg}</p>
-          <div style="display:flex; justify-content:center; gap:32px; margin-top:8px;">
+          <div style="display:flex; justify-content:center; gap:40px; margin-top:4px; margin-bottom:4px;">
             <div style="text-align:center;">
-              <div style="font-size:24px; font-weight:700; color:#ef4444;">${jarak}m</div>
-              <div style="font-size:12px; color:#9ca3af;">Jarak Anda</div>
+              <div style="font-size:28px; font-weight:700; color:#ef4444;">${jarak}m</div>
+              <div style="font-size:12px; color:#9ca3af; margin-top:2px;">Jarak Anda</div>
             </div>
             <div style="text-align:center;">
-              <div style="font-size:24px; font-weight:700; color:#22c55e;">${radius}m</div>
-              <div style="font-size:12px; color:#9ca3af;">Batas Radius</div>
+              <div style="font-size:28px; font-weight:700; color:#22c55e;">${radius}m</div>
+              <div style="font-size:12px; color:#9ca3af; margin-top:2px;">Batas Radius</div>
             </div>
           </div>
         `,
         confirmButtonText: "Mengerti",
         confirmButtonColor: "#f59e0b",
       });
-    } else if (status === 403 && jarak === undefined) {
+    } else if (isTidakAdaShift) {
       // ── Tidak punya jadwal shift hari ini ─────────────────────────────
       await Swal.fire({
         icon: "info",
