@@ -250,39 +250,42 @@ const onDetect = async (detectedCodes) => {
     router.push("/presensi");
   } catch (error) {
     const msg = error.response?.data?.message || "Gagal melakukan presensi.";
-
-    // Bedakan error GPS (403) vs error lain
     const status = error.response?.status;
-    if (status === 403) {
-      // Di luar radius → tampilkan info jarak
-      const jarak = error.response?.data?.jarak;
-      const radius = error.response?.data?.radius_kantor;
+    const jarak = error.response?.data?.jarak; // ada kalau di luar radius
+    const radius = error.response?.data?.radius_kantor;
+
+    if (status === 403 && jarak !== undefined) {
+      // ── Di luar radius kantor (ada data jarak di response) ────────────
       await Swal.fire({
         icon: "warning",
         title: "Di Luar Area Kantor",
         html: `
-          <p class="text-gray-600 text-sm mb-3">${msg}</p>
-          ${
-            jarak
-              ? `
-          <div class="flex justify-center gap-6 mt-2">
-            <div class="text-center">
-              <div class="text-2xl font-bold text-red-500">${jarak}m</div>
-              <div class="text-xs text-gray-400">Jarak Anda</div>
+          <p style="color:#6b7280; font-size:14px; margin-bottom:12px;">${msg}</p>
+          <div style="display:flex; justify-content:center; gap:32px; margin-top:8px;">
+            <div style="text-align:center;">
+              <div style="font-size:24px; font-weight:700; color:#ef4444;">${jarak}m</div>
+              <div style="font-size:12px; color:#9ca3af;">Jarak Anda</div>
             </div>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-green-500">${radius}m</div>
-              <div class="text-xs text-gray-400">Batas Radius</div>
+            <div style="text-align:center;">
+              <div style="font-size:24px; font-weight:700; color:#22c55e;">${radius}m</div>
+              <div style="font-size:12px; color:#9ca3af;">Batas Radius</div>
             </div>
-          </div>`
-              : ""
-          }
+          </div>
         `,
         confirmButtonText: "Mengerti",
         confirmButtonColor: "#f59e0b",
       });
+    } else if (status === 403 && jarak === undefined) {
+      // ── Tidak punya jadwal shift hari ini ─────────────────────────────
+      await Swal.fire({
+        icon: "info",
+        title: "Tidak Ada Jadwal",
+        text: msg,
+        confirmButtonText: "OK",
+        confirmButtonColor: "#6366f1",
+      });
     } else if (status === 400) {
-      // QR expired atau sudah presensi
+      // ── QR expired atau sudah presensi ────────────────────────────────
       await Swal.fire({
         icon: "info",
         title: "Perhatian",
@@ -291,7 +294,7 @@ const onDetect = async (detectedCodes) => {
         confirmButtonColor: "#6366f1",
       });
     } else {
-      // Error umum
+      // ── Error umum ────────────────────────────────────────────────────
       await alertError(msg);
     }
   } finally {
