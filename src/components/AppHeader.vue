@@ -20,7 +20,7 @@
           <span class="text-gray-500 text-xs">-</span>
           {{ user.jabatan ?? "Belum ada jabatan" }}
         </p>
-      </div>
+      </div> 
     </div>
 
     <!-- Slot untuk tombol kanan -->

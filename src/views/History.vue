@@ -1,22 +1,444 @@
 <template>
-  <div class="px-6 pt-8 pb-4">
-    <AppHeader>
-      <button
-        class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm border border-gray-100"
-      >
-        <CalendarIcon :size="20" class="text-gray-400" />
-      </button>
-    </AppHeader>
+  <div class="flex flex-col min-h-full bg-gray-50 pb-28">
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
+    <div class="px-6 pt-8 pb-4">
+      <AppHeader />
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Riwayat Presensi</h1>
+        <p class="text-sm text-gray-400 mt-1">
+          Cek aktivitas kehadiran Anda di sini.
+        </p>
+      </div>
+    </div>
 
-    <!-- Title -->
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-800">Riwayat Presensi</h1>
-      <p class="text-sm text-gray-400">Cek aktivitas kehadiran Anda di sini.</p>
+    <!-- ── Kalender ───────────────────────────────────────────────────── -->
+    <div class="mx-6 mb-5">
+      <div
+        class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
+      >
+        <!-- Header bulan -->
+        <div class="flex items-center justify-between px-5 pt-5 pb-3">
+          <button
+            @click="prevMonth"
+            class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center active:scale-95 transition-all"
+          >
+            <ChevronLeftIcon :size="18" class="text-gray-500" />
+          </button>
+          <span class="font-bold text-gray-800 text-sm">
+            {{ BULAN_ID[calMonth] }} {{ calYear }}
+          </span>
+          <button
+            @click="nextMonth"
+            class="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center active:scale-95 transition-all"
+            :disabled="isCurrentMonth"
+            :class="isCurrentMonth ? 'opacity-30 cursor-not-allowed' : ''"
+          >
+            <ChevronRightIcon :size="18" class="text-gray-500" />
+          </button>
+        </div>
+
+        <!-- Nama hari -->
+        <div class="grid grid-cols-7 px-3 pb-1">
+          <div
+            v-for="h in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']"
+            :key="h"
+            class="text-center text-[10px] font-bold text-gray-300 py-1 uppercase tracking-wider"
+          >
+            {{ h }}
+          </div>
+        </div>
+
+        <!-- Grid tanggal -->
+        <div class="grid grid-cols-7 px-3 pb-4 gap-y-1">
+          <!-- Padding awal bulan -->
+          <div v-for="n in firstDayOfMonth" :key="'e' + n"></div>
+
+          <!-- Tanggal -->
+          <div
+            v-for="d in daysInMonth"
+            :key="d"
+            @click="selectDate(d)"
+            class="flex flex-col items-center justify-center py-1 cursor-pointer relative"
+          >
+            <!-- Dot status presensi -->
+            <div
+              v-if="getStatusForDay(d)"
+              class="absolute top-0.5 w-1.5 h-1.5 rounded-full"
+              :class="{
+                'bg-green-400': getStatusForDay(d) === 'hadir',
+                'bg-amber-400': getStatusForDay(d) === 'terlambat',
+              }"
+            ></div>
+
+            <!-- Lingkaran tanggal -->
+            <div
+              class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold transition-all"
+              :class="getDayClass(d)"
+            >
+              {{ d }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary strip -->
+        <div class="grid grid-cols-3 border-t border-gray-50">
+          <div class="flex flex-col items-center py-3 border-r border-gray-50">
+            <span class="text-lg font-black text-green-500">{{
+              summary.total_hadir
+            }}</span>
+            <span
+              class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide"
+              >Hadir</span
+            >
+          </div>
+          <div class="flex flex-col items-center py-3 border-r border-gray-50">
+            <span class="text-lg font-black text-amber-400">{{
+              summary.total_terlambat
+            }}</span>
+            <span
+              class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide"
+              >Terlambat</span
+            >
+          </div>
+          <div class="flex flex-col items-center py-3">
+            <span class="text-lg font-black text-gray-300">{{
+              daysInMonth - summary.total_hadir
+            }}</span>
+            <span
+              class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide"
+              >Absen</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── List Riwayat ────────────────────────────────────────────────── -->
+    <div class="px-6 flex flex-col gap-3">
+      <!-- Loading -->
+      <div v-if="loading" class="flex flex-col gap-3">
+        <div
+          v-for="n in 3"
+          :key="n"
+          class="bg-white rounded-3xl h-24 animate-pulse border border-gray-100"
+        ></div>
+      </div>
+
+      <!-- Empty state -->
+      <div
+        v-else-if="filteredList.length === 0"
+        class="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-sm"
+      >
+        <div
+          class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3"
+        >
+          <CalendarOffIcon :size="28" class="text-gray-300" />
+        </div>
+        <p class="text-sm font-semibold text-gray-400">
+          Tidak ada data presensi
+        </p>
+        <p class="text-xs text-gray-300 mt-1">
+          {{ selectedDate ? "pada tanggal ini" : "bulan ini" }}
+        </p>
+      </div>
+
+      <!-- Cards -->
+      <div v-else>
+        <!-- Label jika filter tanggal aktif -->
+        <div
+          v-if="selectedDate"
+          class="flex items-center justify-between mb-2 px-1"
+        >
+          <p class="text-xs font-semibold text-gray-400">
+            Menampilkan tanggal {{ formatSelectedLabel }}
+          </p>
+          <button
+            @click="selectedDate = null"
+            class="text-xs text-primary font-semibold"
+          >
+            Lihat semua
+          </button>
+        </div>
+
+        <TransitionGroup name="card" tag="div" class="flex flex-col gap-3">
+          <div
+            v-for="item in filteredList"
+            :key="item.id"
+            class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
+          >
+            <!-- Card inner -->
+            <div class="flex items-stretch">
+              <!-- Tanggal block -->
+              <div
+                class="flex flex-col items-center justify-center px-4 py-4 min-w-[72px]"
+                :class="getCardAccentClass(item.status)"
+              >
+                <span
+                  class="text-2xl font-black leading-none"
+                  :class="getCardDateColor(item.status)"
+                >
+                  {{ item.tanggal_num }}
+                </span>
+                <span
+                  class="text-[10px] font-bold uppercase tracking-wider mt-0.5"
+                  :class="getCardDateColor(item.status)"
+                >
+                  {{ shortDay(item.hari) }}
+                </span>
+              </div>
+
+              <!-- Info block -->
+              <div class="flex-1 px-4 py-3 flex flex-col justify-center gap-2">
+                <!-- Check in / out / total -->
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <p
+                      class="text-[10px] font-bold text-gray-400 uppercase tracking-wide"
+                    >
+                      Check In
+                    </p>
+                    <p class="text-sm font-black text-gray-800">
+                      {{ item.jam_masuk ?? "-" }}
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      class="text-[10px] font-bold text-gray-400 uppercase tracking-wide"
+                    >
+                      Check Out
+                    </p>
+                    <p class="text-sm font-black text-gray-800">
+                      {{ item.jam_pulang ?? "-" }}
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      class="text-[10px] font-bold text-gray-400 uppercase tracking-wide"
+                    >
+                      Total Jam
+                    </p>
+                    <p class="text-sm font-black text-gray-800">
+                      {{ item.total_jam ?? "-" }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="border-t border-gray-50"></div>
+
+                <!-- Lokasi & status -->
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <MapPinIcon
+                      :size="12"
+                      class="text-gray-300 flex-shrink-0"
+                    />
+                    <span class="text-[11px] text-gray-400 truncate">
+                      {{ item.jarak ?? "Lokasi tidak tersedia" }}
+                    </span>
+                  </div>
+                  <!-- Badge status -->
+                  <span
+                    class="flex-shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide"
+                    :class="{
+                      'bg-green-50 text-green-600': item.status === 'hadir',
+                      'bg-amber-50 text-amber-600': item.status === 'terlambat',
+                      'bg-red-50   text-red-500': item.status === 'alpa',
+                    }"
+                  >
+                    {{ item.status }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </TransitionGroup>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, computed, onMounted, watch } from "vue";
 import AppHeader from "@/components/AppHeader.vue";
-import { Calendar as CalendarIcon } from "lucide-vue-next";
+import api from "@/plugins/axios";
+import {
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  MapPin as MapPinIcon,
+  CalendarOff as CalendarOffIcon,
+} from "lucide-vue-next";
+
+// ── Konstanta ─────────────────────────────────────────────────────────────────
+const BULAN_ID = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+];
+const HARI_SHORT = {
+  Senin: "Sen",
+  Selasa: "Sel",
+  Rabu: "Rab",
+  Kamis: "Kam",
+  Jumat: "Jum",
+  Sabtu: "Sab",
+  Minggu: "Min",
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const today = new Date();
+const calYear = ref(today.getFullYear());
+const calMonth = ref(today.getMonth()); // 0-indexed
+
+const loading = ref(false);
+const riwayatData = ref([]);
+const summary = ref({ total_hadir: 0, total_terlambat: 0 });
+const selectedDate = ref(null); // angka tanggal yang diklik, atau null
+
+// ── Computed kalender ─────────────────────────────────────────────────────────
+const daysInMonth = computed(() =>
+  new Date(calYear.value, calMonth.value + 1, 0).getDate(),
+);
+
+const firstDayOfMonth = computed(() =>
+  new Date(calYear.value, calMonth.value, 1).getDay(),
+);
+
+const isCurrentMonth = computed(
+  () =>
+    calYear.value === today.getFullYear() &&
+    calMonth.value === today.getMonth(),
+);
+
+// Map tanggal → status (untuk dot kalender)
+const statusMap = computed(() => {
+  const map = {};
+  riwayatData.value.forEach((p) => {
+    const d = parseInt(p.tanggal_num);
+    map[d] = p.status;
+  });
+  return map;
+});
+
+// ── Computed list ─────────────────────────────────────────────────────────────
+const filteredList = computed(() => {
+  if (!selectedDate.value) return riwayatData.value;
+  const pad = String(selectedDate.value).padStart(2, "0");
+  const bulan = `${calYear.value}-${String(calMonth.value + 1).padStart(2, "0")}`;
+  return riwayatData.value.filter((p) => p.tanggal === `${bulan}-${pad}`);
+});
+
+const formatSelectedLabel = computed(() => {
+  if (!selectedDate.value) return "";
+  const d = new Date(calYear.value, calMonth.value, selectedDate.value);
+  return d.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+});
+
+// ── Fetch data ────────────────────────────────────────────────────────────────
+const fetchRiwayat = async () => {
+  loading.value = true;
+  selectedDate.value = null;
+  try {
+    const bulan = `${calYear.value}-${String(calMonth.value + 1).padStart(2, "0")}`;
+    const res = await api.get("/presensi/riwayat", { params: { bulan } });
+    riwayatData.value = res.data.data ?? [];
+    summary.value = res.data.summary ?? { total_hadir: 0, total_terlambat: 0 };
+  } catch (e) {
+    console.error("Gagal fetch riwayat:", e);
+    riwayatData.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+// ── Navigasi bulan ────────────────────────────────────────────────────────────
+const prevMonth = () => {
+  if (calMonth.value === 0) {
+    calMonth.value = 11;
+    calYear.value--;
+  } else calMonth.value--;
+};
+
+const nextMonth = () => {
+  if (isCurrentMonth.value) return;
+  if (calMonth.value === 11) {
+    calMonth.value = 0;
+    calYear.value++;
+  } else calMonth.value++;
+};
+
+// Re-fetch setiap ganti bulan
+watch([calYear, calMonth], fetchRiwayat);
+
+// ── Klik tanggal ──────────────────────────────────────────────────────────────
+const selectDate = (d) => {
+  if (selectedDate.value === d) {
+    selectedDate.value = null; // toggle off
+  } else {
+    selectedDate.value = d;
+  }
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const getStatusForDay = (d) => statusMap.value[d] ?? null;
+
+const getDayClass = (d) => {
+  const isToday = isCurrentMonth.value && d === today.getDate();
+  const isSelected = d === selectedDate.value;
+  const status = getStatusForDay(d);
+
+  if (isSelected) return "bg-primary text-white shadow-md shadow-primary/30";
+  if (isToday) return "bg-gray-100 text-gray-800";
+  if (status === "hadir") return "text-green-600 font-bold hover:bg-green-50";
+  if (status === "terlambat")
+    return "text-amber-500 font-bold hover:bg-amber-50";
+  return "text-gray-500 hover:bg-gray-50";
+};
+
+const getCardAccentClass = (status) => {
+  if (status === "hadir") return "bg-primary/10";
+  if (status === "terlambat") return "bg-amber-50";
+  return "bg-red-50";
+};
+
+const getCardDateColor = (status) => {
+  if (status === "hadir") return "text-primary";
+  if (status === "terlambat") return "text-amber-500";
+  return "text-red-400";
+};
+
+const shortDay = (hari) => HARI_SHORT[hari] ?? hari?.slice(0, 3) ?? "-";
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+onMounted(fetchRiwayat);
 </script>
+
+<style scoped>
+.card-enter-active {
+  transition: all 0.25s ease;
+}
+.card-leave-active {
+  transition: all 0.2s ease;
+}
+.card-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.card-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+</style>

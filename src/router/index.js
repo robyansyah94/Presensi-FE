@@ -74,7 +74,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.guestOnly && token) {
     return next("/home");
   }
-
+ 
   next();
 });
 
