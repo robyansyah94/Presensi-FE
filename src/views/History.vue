@@ -123,7 +123,7 @@
         <!-- Label filter tanggal aktif -->
         <div
           v-if="selectedDate"
-          class="flex items-center justify-between mb-2 px-1"
+          class="flex items-center justify-between mb-5 px-1"
         >
           <p class="text-xs font-semibold text-gray-400">
             {{ formatSelectedLabel }}
