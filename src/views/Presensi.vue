@@ -1,33 +1,40 @@
 <template>
   <div class="flex flex-col h-full bg-gray-50">
     <!-- Header -->
+    <!-- Header -->
     <div class="px-6 pt-8 pb-4">
-      <div class="flex justify-between items-center mb-8">
-        <div class="flex items-center gap-3">
-          <div
-            class="w-12 h-12 rounded-full bg-primary/10 overflow-hidden border-2 border-white shadow-sm"
-          >
-            <img
-              :src="profileImage"
-              alt="Profile"
-              class="w-full h-full object-cover rounded-2xl"
-            />
+      <AppHeader />
+      <div class="mb-5">
+        <h1 class="text-2xl font-bold text-gray-800">Presensi</h1>
+      </div>
+    </div>
+
+    <!-- Clock Card -->
+    <div class="px-6">
+      <div
+        class="bg-primary rounded-3xl p-6 text-white mb-6 relative overflow-hidden shadow-xl shadow-primary/20"
+      >
+        <div class="relative z-10">
+          <p class="text-white/70 text-sm font-medium mb-1">
+            {{ currentDate }}
+          </p>
+
+          <div class="text-4xl font-black tracking-wider mb-4">
+            {{ currentTime }}
           </div>
-          <div>
-            <h2 class="font-bold text-gray-800 text-sm leading-tight">
-              NAMA
-            </h2>
-            <p class="text-xs text-gray-500">JABATAN</p>
+
+          <div
+            class="flex items-center gap-1.5 bg-white/20 w-max px-3 py-1 rounded-full text-[10px] font-bold backdrop-blur-sm"
+          >
+            <div
+              class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+            ></div>
+            Waktu Sekarang
           </div>
         </div>
-      </div>
-
-      <!-- Title Area -->
-      <div class="mb-6 text-center">
-        <h1 class="text-2xl font-bold text-gray-800">Presensi</h1>
-        <p class="text-sm text-gray-400 px-4 mt-2">
-          Pilih jenis presensi Anda hari ini.
-        </p>
+        <div
+          class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-white/10 blur-2xl"
+        ></div>
       </div>
     </div>
 
@@ -83,9 +90,10 @@
 </template>
 
 <script setup>
-import { onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { LogIn as LogInIcon } from "lucide-vue-next";
+import AppHeader from "@/components/AppHeader.vue";
 
 const router = useRouter();
 
@@ -101,5 +109,30 @@ const goToScanner = (type) => {
   router.push({ path: "/scanner", query: { type } });
 };
 
-</script>
+// ── Jam real-time ─────────────────────────────────────────────────────────────
+const currentTime = ref("");
+const currentDate = ref("");
 
+const updateTime = () => {
+  const now = new Date();
+  currentTime.value = now.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  currentDate.value = now.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+let timer;
+onMounted(() => {
+  updateTime();
+  timer = setInterval(updateTime, 1000);
+});
+onUnmounted(() => clearInterval(timer));
+</script>

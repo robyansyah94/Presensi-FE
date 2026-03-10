@@ -3,11 +3,8 @@
     <!-- ── Header ─────────────────────────────────────────────────────── -->
     <div class="px-6 pt-8 pb-4">
       <AppHeader />
-      <div class="mb-6">
+      <div class="mb-5">
         <h1 class="text-2xl font-bold text-gray-800">Riwayat Presensi</h1>
-        <p class="text-sm text-gray-400 mt-1">
-          Cek aktivitas kehadiran Anda di sini.
-        </p>
       </div>
     </div>
 
@@ -139,7 +136,7 @@
           </button>
         </div>
 
-        <!-- Empty state: tidak ada sama sekali di bulan ini -->
+        <!-- Empty state -->
         <div
           v-if="displayList.length === 0"
           class="bg-white rounded-3xl p-8 text-center border border-gray-100 shadow-sm"
@@ -150,9 +147,11 @@
             <CalendarOffIcon :size="28" class="text-gray-300" />
           </div>
           <p class="text-sm font-semibold text-gray-400">
-            Tidak ada data presensi
+            Belum ada data presensi
           </p>
-          <p class="text-xs text-gray-300 mt-1">bulan ini</p>
+          <p class="text-xs text-gray-300 mt-1">
+            {{ selectedDate ? "pada tanggal ini" : "bulan ini" }}
+          </p>
         </div>
 
         <TransitionGroup
@@ -162,43 +161,9 @@
           class="flex flex-col gap-3"
         >
           <div v-for="item in displayList" :key="item.key">
-            <!-- ── Card: belum ada presensi (hari ke depan) ── -->
-            <div
-              v-if="item.type === 'future'"
-              class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
-            >
-              <div class="flex items-stretch">
-                <div
-                  class="flex flex-col items-center justify-center px-4 py-4 min-w-[72px] bg-gray-50"
-                >
-                  <span
-                    class="text-2xl font-black leading-none text-gray-300"
-                    >{{ item.tanggal_num }}</span
-                  >
-                  <span
-                    class="text-[10px] font-bold uppercase tracking-wider mt-0.5 text-gray-300"
-                    >{{ item.hari_short }}</span
-                  >
-                </div>
-                <div class="flex-1 px-4 py-4 flex items-center">
-                  <div class="flex items-center gap-2">
-                    <div
-                      class="w-7 h-7 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0"
-                    >
-                      <CalendarOffIcon :size="14" class="text-gray-300" />
-                    </div>
-                    <p class="text-xs text-gray-400 leading-tight">
-                      Tidak ada data presensi<br />
-                      <span class="text-gray-300">pada tanggal ini</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- ── Card: alpa (hari lalu, tidak ada presensi) ── -->
             <div
-              v-else-if="item.type === 'alpa'"
+              v-if="item.type === 'alpa'"
               class="bg-white rounded-3xl border border-red-50 shadow-sm overflow-hidden"
             >
               <div class="flex items-stretch">
@@ -358,17 +323,6 @@ const BULAN_ID = [
   "November",
   "Desember",
 ];
-
-// Nama hari Indonesia berdasarkan getDay() (0=Minggu)
-const HARI_ID = [
-  "Minggu",
-  "Senin",
-  "Selasa",
-  "Rabu",
-  "Kamis",
-  "Jumat",
-  "Sabtu",
-];
 const HARI_SHORT_ID = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -386,11 +340,9 @@ const selectedDate = ref(null);
 const daysInMonth = computed(() =>
   new Date(calYear.value, calMonth.value + 1, 0).getDate(),
 );
-
 const firstDayOfMonth = computed(() =>
   new Date(calYear.value, calMonth.value, 1).getDay(),
 );
-
 const isCurrentMonth = computed(
   () =>
     calYear.value === today.getFullYear() &&
@@ -406,7 +358,11 @@ const statusMap = computed(() => {
   return map;
 });
 
-// ── Build display list (presensi + alpa + future) ────────────────────────────
+// ── Build display list ────────────────────────────────────────────────────────
+// Aturan:
+// - Hari lalu (< today): tampilkan semua — presensi atau alpa
+// - Hari ini (= today) : tampilkan HANYA jika ada data presensi
+// - Hari depan (> today): TIDAK ditampilkan
 const allDaysList = computed(() => {
   const bulanStr = `${calYear.value}-${String(calMonth.value + 1).padStart(2, "0")}`;
   const presensiMap = {};
@@ -419,11 +375,10 @@ const allDaysList = computed(() => {
   for (let d = 1; d <= daysInMonth.value; d++) {
     const dateStr = `${bulanStr}-${String(d).padStart(2, "0")}`;
     const dateObj = new Date(calYear.value, calMonth.value, d);
-    const dayIndex = dateObj.getDay(); // 0=Min
-    const hariShort = HARI_SHORT_ID[dayIndex];
+    const hariShort = HARI_SHORT_ID[dateObj.getDay()];
 
     if (presensiMap[dateStr]) {
-      // Ada data presensi
+      // Ada data presensi (hari apapun termasuk hari ini)
       list.push({
         key: dateStr,
         type: "presensi",
@@ -431,7 +386,7 @@ const allDaysList = computed(() => {
         ...presensiMap[dateStr],
       });
     } else if (dateStr < todayStr) {
-      // Hari lalu, tidak ada presensi → ALPA
+      // Hari lalu tanpa presensi → Alpa
       list.push({
         key: dateStr,
         type: "alpa",
@@ -439,21 +394,12 @@ const allDaysList = computed(() => {
         tanggal_num: String(d).padStart(2, "0"),
         hari_short: hariShort,
       });
-    } else if (dateStr > todayStr) {
-      // Hari mendatang → belum ada data
-      list.push({
-        key: dateStr,
-        type: "future",
-        tanggal: dateStr,
-        tanggal_num: String(d).padStart(2, "0"),
-        hari_short: hariShort,
-      });
     }
-    // dateStr === todayStr + belum presensi → tidak tampilkan (hari ini, belum waktunya)
+    // dateStr === todayStr tanpa presensi → skip (belum presensi hari ini)
+    // dateStr > todayStr → skip (hari depan tidak ditampilkan)
   }
 
-  // Urutkan ascending (terlama di atas)
-  return list.sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+  return list.sort((a, b) => b.tanggal.localeCompare(a.tanggal));
 });
 
 // Computed: list yang ditampilkan (semua atau filter 1 tanggal)
@@ -485,7 +431,6 @@ const fetchRiwayat = async () => {
     const res = await api.get("/presensi/riwayat", { params: { bulan } });
     riwayatData.value = res.data.data ?? [];
 
-    // Hitung alpa dari allDaysList (setelah riwayatData terisi)
     const totalAlpa = allDaysList.value.filter((i) => i.type === "alpa").length;
     summary.value = {
       total_hadir: res.data.summary?.total_hadir ?? 0,
