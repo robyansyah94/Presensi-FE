@@ -90,8 +90,8 @@
       </div>
     </div>
 
-    <!-- Section -->
-    <div class="flex justify-between items-center mb-4">
+    <!-- Section Kehadiran -->
+    <!-- <div class="flex justify-between items-center mb-4">
       <h3 class="font-bold text-gray-800">Kehadiran</h3>
       <button
         class="text-xs font-bold text-primary px-3 py-1 rounded-full bg-primary/5"
@@ -101,25 +101,116 @@
     </div>
 
     <div
-      class="bg-white rounded-3xl p-10 flex flex-col items-center justify-center border border-dashed border-gray-200 opacity-60"
+      class="bg-white rounded-3xl p-10 flex flex-col items-center justify-center border border-dashed border-gray-200 opacity-60 mb-6"
     >
       <LayoutGridIcon :size="48" class="text-gray-300 mb-4" />
       <p class="text-sm font-medium text-gray-500 italic">
         Konten tambahan segera...
       </p>
+    </div> -->
+
+    <!-- Section Penilaian Sikap -->
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-gray-800">Assessment</h3>
+      <router-link
+        to="/assessment"
+        class="text-xs font-bold text-primary px-3 py-1 rounded-full bg-primary/5"
+      >
+        Lihat Semua
+      </router-link>
     </div>
+
+    <router-link to="/assessment">
+      <div
+        class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden active:scale-[0.98] transition-transform mb-2"
+      >
+        <div class="flex items-center gap-4 p-5">
+          <!-- Icon -->
+          <div
+            class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0"
+          >
+            <StarIcon :size="22" class="text-amber-400" />
+          </div>
+
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-gray-800 text-sm">Penilaian Sikap</p>
+            <p class="text-xs text-gray-400 mt-0.5">
+              Lihat hasil penilaian kamu dari atasan
+            </p>
+          </div>
+
+          <!-- Arrow -->
+          <ChevronRightIcon :size="18" class="text-gray-300 shrink-0" />
+        </div>
+
+        <!-- Rating preview strip -->
+        <div class="grid grid-cols-3 border-t border-gray-50">
+          <div class="flex flex-col items-center py-3 border-r border-gray-50">
+            <div class="flex gap-0.5 mb-1">
+              <span
+                v-for="s in 5"
+                :key="s"
+                class="text-xs"
+                :class="s <= 4 ? 'text-amber-400' : 'text-gray-200'"
+                >★</span
+              >
+            </div>
+            <span
+              class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide"
+              >Disiplin</span
+            >
+          </div>
+          <div class="flex flex-col items-center py-3 border-r border-gray-50">
+            <div class="flex gap-0.5 mb-1">
+              <span
+                v-for="s in 5"
+                :key="s"
+                class="text-xs"
+                :class="s <= 5 ? 'text-amber-400' : 'text-gray-200'"
+                >★</span
+              >
+            </div>
+            <span
+              class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide"
+              >Kerjasama</span
+            >
+          </div>
+          <div class="flex flex-col items-center py-3">
+            <div class="flex gap-0.5 mb-1">
+              <span
+                v-for="s in 5"
+                :key="s"
+                class="text-xs"
+                :class="s <= 3 ? 'text-amber-400' : 'text-gray-200'"
+                >★</span
+              >
+            </div>
+            <span
+              class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide"
+              >Inisiatif</span
+            >
+          </div>
+        </div>
+      </div>
+    </router-link>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 import AppHeader from "@/components/AppHeader.vue";
 import api from "@/plugins/axios";
 import {
   Bell as BellIcon,
   LogIn as LogInIcon,
   LayoutGrid as LayoutGridIcon,
+  Star as StarIcon,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-vue-next";
+
+const router = useRouter();
 
 // ── Jam real-time ─────────────────────────────────────────────────────────────
 const currentTime = ref("");

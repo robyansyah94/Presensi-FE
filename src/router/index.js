@@ -7,6 +7,7 @@ import Presensi from "../views/Presensi.vue";
 import Submission from "../views/Submission.vue";
 import Profile from "../views/Profile.vue";
 import Scanner from "../views/Scanner.vue";
+import Assessment from "../views/Assessment.vue";
 import MainLayout from "../components/MainLayout.vue";
 
 const routes = [
@@ -46,6 +47,11 @@ const routes = [
         name: "Profile",
         component: Profile,
       },
+      {
+        path: "assessment",
+        name: "Assessment",
+        component: Assessment,
+      },
     ],
   },
   {
@@ -74,7 +80,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.guestOnly && token) {
     return next("/home");
   }
- 
+
   next();
 });
 
