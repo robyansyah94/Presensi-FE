@@ -4,7 +4,7 @@ import Login from "../views/Login.vue";
 import Home from "../views/Home.vue";
 import History from "../views/History.vue";
 import Presensi from "../views/Presensi.vue";
-import Submission from "../views/Submission.vue";
+import Pengajuan from "../views/Pengajuan.vue";
 import Profile from "../views/Profile.vue";
 import Scanner from "../views/Scanner.vue";
 import Assessment from "../views/Assessment.vue";
@@ -38,9 +38,9 @@ const routes = [
         component: Presensi,
       },
       {
-        path: "submission",
-        name: "Submission",
-        component: Submission,
+        path: "pengajuan",
+        name: "Pengajuan",
+        component: Pengajuan,
       },
       {
         path: "profile",

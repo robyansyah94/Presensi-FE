@@ -62,6 +62,9 @@
                 'bg-green-400': getStatusForDay(d) === 'hadir',
                 'bg-amber-400': getStatusForDay(d) === 'terlambat',
                 'bg-red-400': getStatusForDay(d) === 'alpa',
+                'bg-blue-400': ['izin', 'sakit', 'cuti'].includes(
+                  getStatusForDay(d),
+                ),
               }"
             ></div>
 
@@ -161,7 +164,7 @@
           class="flex flex-col gap-3"
         >
           <div v-for="item in displayList" :key="item.key">
-            <!-- ── Card: alpa (hari lalu, tidak ada presensi) ── -->
+            <!-- ── Card: alpa ── -->
             <div
               v-if="item.type === 'alpa'"
               class="bg-white rounded-3xl border border-red-50 shadow-sm overflow-hidden"
@@ -201,7 +204,50 @@
               </div>
             </div>
 
-            <!-- ── Card: ada presensi ── -->
+            <!-- ── Card: izin / sakit / cuti ── -->
+            <div
+              v-else-if="['izin', 'sakit', 'cuti'].includes(item.status)"
+              class="bg-white rounded-3xl border border-blue-50 shadow-sm overflow-hidden"
+            >
+              <div class="flex items-stretch">
+                <div
+                  class="flex flex-col items-center justify-center px-4 py-4 min-w-[72px] bg-blue-50"
+                >
+                  <span
+                    class="text-2xl font-black leading-none text-blue-500"
+                    >{{ item.tanggal_num }}</span
+                  >
+                  <span
+                    class="text-[10px] font-bold uppercase tracking-wider mt-0.5 text-blue-400"
+                    >{{ item.hari_short }}</span
+                  >
+                </div>
+                <div
+                  class="flex-1 px-4 py-4 flex items-center justify-between gap-2"
+                >
+                  <div class="flex items-center gap-2">
+                    <div
+                      class="w-7 h-7 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0"
+                    >
+                      <FileTextIcon :size="14" class="text-blue-400" />
+                    </div>
+                    <p class="text-xs text-gray-500 leading-tight">
+                      Pengajuan disetujui<br />
+                      <span class="text-gray-300">oleh admin</span>
+                    </p>
+                  </div>
+                  <span
+                    class="flex-shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide bg-blue-50 text-blue-500 border border-blue-100"
+                  >
+                    {{
+                      item.status.charAt(0).toUpperCase() + item.status.slice(1)
+                    }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Card: hadir / terlambat ── -->
             <div
               v-else
               class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
@@ -283,7 +329,10 @@
                           item.status === 'terlambat',
                       }"
                     >
-                      {{ item.status }}
+                      {{
+                        item.status.charAt(0).toUpperCase() +
+                        item.status.slice(1)
+                      }}
                     </span>
                   </div>
                 </div>
@@ -306,6 +355,7 @@ import {
   MapPin as MapPinIcon,
   CalendarOff as CalendarOffIcon,
   XCircle as XCircleIcon,
+  FileText as FileTextIcon,
 } from "lucide-vue-next";
 
 // ── Konstanta ─────────────────────────────────────────────────────────────────
@@ -359,10 +409,6 @@ const statusMap = computed(() => {
 });
 
 // ── Build display list ────────────────────────────────────────────────────────
-// Aturan:
-// - Hari lalu (< today): tampilkan semua — presensi atau alpa
-// - Hari ini (= today) : tampilkan HANYA jika ada data presensi
-// - Hari depan (> today): TIDAK ditampilkan
 const allDaysList = computed(() => {
   const bulanStr = `${calYear.value}-${String(calMonth.value + 1).padStart(2, "0")}`;
   const presensiMap = {};
@@ -378,7 +424,6 @@ const allDaysList = computed(() => {
     const hariShort = HARI_SHORT_ID[dateObj.getDay()];
 
     if (presensiMap[dateStr]) {
-      // Ada data presensi (hari apapun termasuk hari ini)
       list.push({
         key: dateStr,
         type: "presensi",
@@ -386,7 +431,6 @@ const allDaysList = computed(() => {
         ...presensiMap[dateStr],
       });
     } else if (dateStr < todayStr) {
-      // Hari lalu tanpa presensi → Alpa
       list.push({
         key: dateStr,
         type: "alpa",
@@ -395,14 +439,14 @@ const allDaysList = computed(() => {
         hari_short: hariShort,
       });
     }
-    // dateStr === todayStr tanpa presensi → skip (belum presensi hari ini)
-    // dateStr > todayStr → skip (hari depan tidak ditampilkan)
+    // hari ini tanpa presensi → skip
+    // hari depan → skip
   }
 
   return list.sort((a, b) => b.tanggal.localeCompare(a.tanggal));
 });
 
-// Computed: list yang ditampilkan (semua atau filter 1 tanggal)
+// Computed: list yang ditampilkan
 const displayList = computed(() => {
   if (!selectedDate.value) return allDaysList.value;
   const pad = String(selectedDate.value).padStart(2, "0");
@@ -467,6 +511,8 @@ const selectDate = (d) => {
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+const PENGAJUAN_STATUS = ["izin", "sakit", "cuti"];
+
 const getStatusForDay = (d) => {
   const bulan = `${calYear.value}-${String(calMonth.value + 1).padStart(2, "0")}`;
   const dateStr = `${bulan}-${String(d).padStart(2, "0")}`;
@@ -486,21 +532,22 @@ const getDayClass = (d) => {
   if (status === "terlambat")
     return "text-amber-500 font-bold hover:bg-amber-50";
   if (status === "alpa") return "text-red-400 hover:bg-red-50";
+  if (PENGAJUAN_STATUS.includes(status))
+    return "text-blue-500 font-bold hover:bg-blue-50";
   return "text-gray-400 hover:bg-gray-50";
 };
 
 const getCardAccentClass = (status) => {
   if (status === "hadir") return "bg-primary/10";
   if (status === "terlambat") return "bg-amber-50";
-  return "bg-red-50";
+  return "bg-gray-50";
 };
 
 const getCardDateColor = (status) => {
   if (status === "hadir") return "text-primary";
   if (status === "terlambat") return "text-amber-500";
-  return "text-red-400";
+  return "text-gray-400";
 };
-
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(fetchRiwayat);
 </script>

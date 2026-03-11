@@ -25,7 +25,7 @@
         </router-link>
       </div>
 
-      <router-link to="/submission" class="flex flex-col items-center gap-1 transition-colors" :class="$route.path === '/submission' ? 'text-primary' : 'text-gray-400'">
+      <router-link to="/pengajuan" class="flex flex-col items-center gap-1 transition-colors" :class="$route.path === '/pengajuan' ? 'text-primary' : 'text-gray-400'">
         <FileTextIcon :size="24" />
         <span class="text-[10px] font-medium">Pengajuan</span>
       </router-link>
