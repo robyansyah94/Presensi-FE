@@ -9,23 +9,12 @@
 
     <!-- ── Filter Periode ──────────────────────────────────────────────── -->
     <div class="px-6 mb-5">
-      <div class="flex gap-2">
-        <button
-          v-for="p in ['harian', 'mingguan', 'bulanan']"
-          :key="p"
-          @click="
-            activePeriod = p;
-            fetchRiwayat();
-          "
-          class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all active:scale-95"
-          :class="
-            activePeriod === p
-              ? 'bg-primary text-white shadow-sm shadow-primary/30'
-              : 'bg-white text-gray-500 border border-gray-200'
-          "
+      <div
+        class="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2"
+      >
+        <span class="text-xs font-bold text-primary uppercase tracking-wide"
+          >Bulanan</span
         >
-          {{ p }}
-        </button>
       </div>
     </div>
 
@@ -182,7 +171,7 @@ import { Star as StarIcon } from "lucide-vue-next";
 import Chart from "chart.js/auto";
 
 // ── State ──────────────────────────────────────────────────────────────────────
-const activePeriod = ref("bulanan");
+const activePeriod = ref("bulanan"); // hanya bulanan
 const loadingList = ref(false);
 const loadingRadar = ref(false);
 const riwayatList = ref([]);
@@ -283,12 +272,6 @@ const formatTanggal = (dateStr) => {
     year: "numeric",
   });
 };
-
-// ── Re-fetch saat period berubah ───────────────────────────────────────────────
-watch(activePeriod, () => {
-  fetchRiwayat();
-  fetchRadar();
-});
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 onMounted(() => {
