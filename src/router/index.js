@@ -9,6 +9,8 @@ import Profile from "../views/Profile.vue";
 import Scanner from "../views/Scanner.vue";
 import Assessment from "../views/Assessment.vue";
 import MainLayout from "../components/MainLayout.vue";
+import Assessment from "../views/Assessment.vue";
+import IntegrityWallet from "../views/IntegrityWallet.vue";
 
 const routes = [
   {
@@ -51,6 +53,11 @@ const routes = [
         path: "assessment",
         name: "Assessment",
         component: Assessment,
+      },
+      {
+        path: "integritywallet",
+        name: "IntegrityWallet",
+        component: IntegrityWallet,
       },
     ],
   },
