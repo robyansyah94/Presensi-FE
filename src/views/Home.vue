@@ -1,11 +1,40 @@
 <template>
   <div class="px-6 pt-8 pb-4">
     <AppHeader class="mb-7">
-      <button
-        class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm border border-gray-100"
+      <!-- Points Badge → IntegrityWallet -->
+      <router-link
+        to="/integritywallet"
+        class="group relative flex items-center gap-2 bg-gradient-to-r from-amber-50 to-amber-100/60 hover:from-amber-100 hover:to-amber-50 border border-amber-200/60 pl-2.5 pr-3.5 py-2 rounded-2xl shadow-sm transition-all active:scale-95 overflow-hidden"
       >
-        <BellIcon :size="20" class="text-gray-400" />
-      </button>
+        <!-- Shimmer effect -->
+        <div
+          class="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+        ></div>
+
+        <!-- Coin icon -->
+        <div
+          class="relative w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shadow-sm shadow-amber-200"
+        >
+          <WalletIcon :size="14" class="text-white" />
+        </div>
+
+        <!-- Points value -->
+        <div class="relative flex flex-col items-end leading-none">
+          <div
+            v-if="loadingWallet"
+            class="h-4 w-10 bg-amber-200/50 rounded-md animate-pulse"
+          ></div>
+          <span
+            v-else
+            class="text-sm font-black text-amber-700 tracking-tight"
+          >
+            {{ walletBalance?.toLocaleString('id-ID') ?? '0' }}
+          </span>
+          <span class="text-[8px] font-bold text-amber-500/70 uppercase tracking-wider mt-0.5">
+            Poin
+          </span>
+        </div>
+      </router-link>
     </AppHeader>
 
     <!-- Real-time Clock Card -->
@@ -203,7 +232,7 @@ import { useRouter } from "vue-router";
 import AppHeader from "@/components/AppHeader.vue";
 import api from "@/plugins/axios";
 import {
-  Bell as BellIcon,
+  Wallet as WalletIcon,
   LogIn as LogInIcon,
   LayoutGrid as LayoutGridIcon,
   Star as StarIcon,
@@ -263,4 +292,23 @@ const fetchPresensiHariIni = async () => {
 };
 
 onMounted(fetchPresensiHariIni);
+
+// ── Wallet balance ────────────────────────────────────────────────────────────
+const loadingWallet = ref(true);
+const walletBalance = ref(null);
+
+const fetchWalletBalance = async () => {
+  loadingWallet.value = true;
+  try {
+    const res = await api.get("/wallet");
+    walletBalance.value = res.data.balance ?? 0;
+  } catch (e) {
+    console.error("Gagal fetch wallet:", e);
+    walletBalance.value = null;
+  } finally {
+    loadingWallet.value = false;
+  }
+};
+
+onMounted(fetchWalletBalance);
 </script>
