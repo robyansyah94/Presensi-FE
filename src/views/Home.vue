@@ -24,13 +24,12 @@
             v-if="loadingWallet"
             class="h-4 w-10 bg-amber-200/50 rounded-md animate-pulse"
           ></div>
-          <span
-            v-else
-            class="text-sm font-black text-amber-700 tracking-tight"
-          >
-            {{ walletBalance?.toLocaleString('id-ID') ?? '0' }}
+          <span v-else class="text-sm font-black text-amber-700 tracking-tight">
+            {{ walletBalance?.toLocaleString("id-ID") ?? "0" }}
           </span>
-          <span class="text-[8px] font-bold text-amber-500/70 uppercase tracking-wider mt-0.5">
+          <span
+            class="text-[8px] font-bold text-amber-500/70 uppercase tracking-wider mt-0.5"
+          >
             Poin
           </span>
         </div>
@@ -119,25 +118,6 @@
       </div>
     </div>
 
-    <!-- Section Kehadiran -->
-    <!-- <div class="flex justify-between items-center mb-4">
-      <h3 class="font-bold text-gray-800">Kehadiran</h3>
-      <button
-        class="text-xs font-bold text-primary px-3 py-1 rounded-full bg-primary/5"
-      >
-        Lihat Semua
-      </button>
-    </div>
-
-    <div
-      class="bg-white rounded-3xl p-10 flex flex-col items-center justify-center border border-dashed border-gray-200 opacity-60 mb-6"
-    >
-      <LayoutGridIcon :size="48" class="text-gray-300 mb-4" />
-      <p class="text-sm font-medium text-gray-500 italic">
-        Konten tambahan segera...
-      </p>
-    </div> -->
-
     <!-- Section Penilaian Sikap -->
     <div class="flex justify-between items-center mb-4">
       <h3 class="font-bold text-gray-800">Assessment</h3>
@@ -223,6 +203,43 @@
         </div>
       </div>
     </router-link>
+
+    <!-- Section Helpdesk -->
+    <div class="flex justify-between items-center mb-4 mt-6">
+      <h3 class="font-bold text-gray-800">Helpdesk</h3>
+      <!-- <router-link
+        to="/helpdesk"
+        class="text-xs font-bold text-primary px-3 py-1 rounded-full bg-primary/5"
+      >
+        Lihat Semua
+      </router-link> -->
+    </div>
+
+    <router-link to="/helpdesk">
+      <div
+        class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden active:scale-[0.98] transition-transform mb-2"
+      >
+        <div class="flex items-center gap-4 p-5">
+          <!-- Icon -->
+          <div
+            class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0"
+          >
+            <HeadsetIcon :size="22" class="text-blue-400" />
+          </div>
+
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-gray-800 text-sm">Helpdesk</p>
+            <p class="text-xs text-gray-400 mt-0.5">
+              Laporkan kendala absensi Anda
+            </p>
+          </div>
+
+          <!-- Arrow -->
+          <ChevronRightIcon :size="18" class="text-gray-300 shrink-0" />
+        </div>
+      </div>
+    </router-link>
   </div>
 </template>
 
@@ -237,6 +254,7 @@ import {
   LayoutGrid as LayoutGridIcon,
   Star as StarIcon,
   ChevronRight as ChevronRightIcon,
+  Headset as HeadsetIcon,
 } from "lucide-vue-next";
 
 const router = useRouter();

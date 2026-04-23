@@ -10,6 +10,8 @@ import Scanner from "../views/Scanner.vue";
 import MainLayout from "../components/MainLayout.vue";
 import Assessment from "../views/Assessment.vue";
 import IntegrityWallet from "../views/IntegrityWallet.vue";
+import Helpdesk from '@/views/Helpdesk.vue'
+import HelpdeskDetail from '@/views/HelpdeskDetail.vue'
 
 const routes = [
   {
@@ -57,6 +59,18 @@ const routes = [
         path: "integritywallet",
         name: "IntegrityWallet",
         component: IntegrityWallet,
+      },
+      {
+        path: "helpdesk",
+        name: "Helpdesk",
+        component: Helpdesk,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "helpdesk/:id",
+        name: "HelpdeskDetail",
+        component: HelpdeskDetail,
+        meta: { requiresAuth: true },
       },
     ],
   },
